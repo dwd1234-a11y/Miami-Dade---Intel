@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DWD — Motivated Seller Leads</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0a0b0e;
+  --surface:   #111318;
+  --card:      #16181f;
+  --border:    #1e2130;
+  --accent:    #f5c842;
+  --accent2:   #e8865a;
+  --red:       #e05a5a;
+  --green:     #4ade80;
+  --blue:      #60a5fa;
+  --purple:    #a78bfa;
+  --muted:     #3a3f52;
+  --text:      #e8eaf0;
+  --text2:     #8b90a8;
+  --text3:     #5a5f75;
+  --font:      'Syne', sans-serif;
+  --mono:      'DM Mono', monospace;
+  --radius:    8px;
+  --radius-lg: 14px;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── HEADER ── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(10,11,14,0.92);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+  gap: 16px;
+}
+.logo {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.logo span { color: var(--accent); }
+.header-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  text-align: right;
+}
+.header-meta strong { color: var(--text2); }
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display: flex;
+  gap: 2px;
+  padding: 0 32px;
+  overflow-x: auto;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.stat-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 14px 20px;
+  white-space: nowrap;
+  min-width: 120px;
+}
+.stat-pill .val {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+}
+.stat-pill .lbl {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+  font-family: var(--mono);
+}
+.stat-pill.red .val  { color: var(--red); }
+.stat-pill.blue .val { color: var(--blue); }
+.stat-pill.grn .val  { color: var(--green); }
+.stat-pill.pur .val  { color: var(--purple); }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  height: calc(100vh - 117px);
+  overflow: hidden;
+}
+
+/* ── SIDEBAR FILTERS ── */
+.sidebar {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 20px 16px;
+  background: var(--surface);
+}
+.filter-section { margin-bottom: 24px; }
+.filter-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 10px;
+  display: block;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.filter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 13px;
+  transition: all 0.15s;
+  text-align: left;
+}
+.filter-btn:hover { background: var(--card); color: var(--text); }
+.filter-btn.active {
+  background: rgba(245,200,66,0.08);
+  border-color: rgba(245,200,66,0.25);
+  color: var(--accent);
+}
+.filter-btn .count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  background: var(--muted);
+  padding: 1px 6px;
+  border-radius: 20px;
+}
+.filter-btn.active .count { background: rgba(245,200,66,0.15); color: var(--accent); }
+
+.search-input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text3); }
+
+.score-range {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+.score-range input[type=range] {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ── RECORDS PANEL ── */
+.records-panel {
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.result-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text3);
+}
+.result-count strong { color: var(--text); }
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: opacity 0.15s;
+}
+.btn-export:hover { opacity: 0.85; }
+
+/* ── RECORD CARDS ── */
+.records-grid { display: flex; flex-direction: column; gap: 8px; }
+
+.record-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  transition: border-color 0.15s, transform 0.1s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.record-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.record-card:hover { border-color: var(--muted); transform: translateY(-1px); }
+.record-card:hover::before { opacity: 1; }
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.owner-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.score-badge {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: var(--mono);
+}
+.score-badge.hot  { background: rgba(224,90,90,0.15); color: var(--red); border: 1.5px solid rgba(224,90,90,0.3); }
+.score-badge.warm { background: rgba(245,200,66,0.12); color: var(--accent); border: 1.5px solid rgba(245,200,66,0.25); }
+.score-badge.cold { background: rgba(138,144,168,0.1); color: var(--text3); border: 1.5px solid var(--border); }
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.tag {
+  font-size: 11px;
+  font-family: var(--mono);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.tag-doctype { background: rgba(96,165,250,0.1); color: var(--blue); }
+.tag-cat-foreclosure { background: rgba(224,90,90,0.12); color: var(--red); }
+.tag-cat-judgment { background: rgba(232,134,90,0.12); color: var(--accent2); }
+.tag-cat-lien { background: rgba(167,139,250,0.12); color: var(--purple); }
+.tag-cat-probate { background: rgba(245,200,66,0.1); color: var(--accent); }
+.tag-cat-tax { background: rgba(232,134,90,0.12); color: var(--accent2); }
+.tag-cat-other { background: var(--muted); color: var(--text2); }
+.tag-amount { background: rgba(74,222,128,0.08); color: var(--green); }
+.tag-date { background: var(--muted); color: var(--text3); }
+
+.card-address {
+  font-size: 12px;
+  color: var(--text2);
+  font-family: var(--mono);
+  margin-bottom: 8px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.addr-block { display: flex; flex-direction: column; gap: 2px; }
+.addr-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); }
+
+.card-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.flag {
+  font-size: 10px;
+  font-family: var(--mono);
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: rgba(224,90,90,0.08);
+  color: var(--red);
+  border: 1px solid rgba(224,90,90,0.15);
+}
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.doc-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+.clerk-link {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--blue);
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.clerk-link:hover { opacity: 1; text-decoration: underline; }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text3);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+.empty h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text2); }
+.empty p { font-size: 13px; }
+
+/* ── LOADING ── */
+.loading {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text3);
+}
+.spinner {
+  width: 32px; height: 32px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .main { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  header { padding: 16px 20px; }
+  .stats-bar { padding: 0 20px; }
+  .records-panel { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Deals <span>With Dignity</span> — Lead Intel</div>
+  <div class="header-meta">
+    <div>Miami-Dade County Public Records</div>
+    <div id="last-updated">Loading...</div>
+  </div>
+</header>
+
+<div class="stats-bar" id="stats-bar">
+  <div class="stat-pill"><div class="val" id="stat-total">—</div><div class="lbl">Total Leads</div></div>
+  <div class="stat-pill red"><div class="val" id="stat-hot">—</div><div class="lbl">Hot (80+)</div></div>
+  <div class="stat-pill blue"><div class="val" id="stat-fc">—</div><div class="lbl">Foreclosure</div></div>
+  <div class="stat-pill pur"><div class="val" id="stat-lien">—</div><div class="lbl">Liens</div></div>
+  <div class="stat-pill"><div class="val" id="stat-judgment">—</div><div class="lbl">Judgments</div></div>
+  <div class="stat-pill"><div class="val" id="stat-probate">—</div><div class="lbl">Probate</div></div>
+  <div class="stat-pill grn"><div class="val" id="stat-addr">—</div><div class="lbl">With Address</div></div>
+</div>
+
+<div class="main">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <!-- Search -->
+    <div class="filter-section">
+      <label class="filter-label">Search Owner</label>
+      <input class="search-input" id="search-input" type="text" placeholder="Name or address..." autocomplete="off"/>
+    </div>
+
+    <!-- Score filter -->
+    <div class="filter-section">
+      <label class="filter-label">Min Seller Score: <strong id="score-val" style="color:var(--accent)">0</strong></label>
+      <div class="score-range">
+        <span>0</span>
+        <input type="range" id="score-range" min="0" max="100" value="0" step="5"/>
+        <span>100</span>
+      </div>
+    </div>
+
+    <!-- Category filters -->
+    <div class="filter-section">
+      <label class="filter-label">Lead Category</label>
+      <div class="filter-group" id="cat-filters">
+        <button class="filter-btn active" data-cat="all">All Categories <span class="count" id="cat-count-all">0</span></button>
+        <button class="filter-btn" data-cat="foreclosure">Foreclosure / LP <span class="count" id="cat-count-foreclosure">0</span></button>
+        <button class="filter-btn" data-cat="judgment">Judgments <span class="count" id="cat-count-judgment">0</span></button>
+        <button class="filter-btn" data-cat="lien">Liens <span class="count" id="cat-count-lien">0</span></button>
+        <button class="filter-btn" data-cat="tax">Tax / Tax Deed <span class="count" id="cat-count-tax">0</span></button>
+        <button class="filter-btn" data-cat="probate">Probate <span class="count" id="cat-count-probate">0</span></button>
+        <button class="filter-btn" data-cat="release">LP Releases <span class="count" id="cat-count-release">0</span></button>
+        <button class="filter-btn" data-cat="construction">NOC <span class="count" id="cat-count-construction">0</span></button>
+      </div>
+    </div>
+
+    <!-- Doc Type filters -->
+    <div class="filter-section">
+      <label class="filter-label">Document Type</label>
+      <div class="filter-group" id="doctype-filters"></div>
+    </div>
+
+    <!-- Flag filters -->
+    <div class="filter-section">
+      <label class="filter-label">Flags</label>
+      <div class="filter-group" id="flag-filters"></div>
+    </div>
+  </aside>
+
+  <!-- RECORDS PANEL -->
+  <div class="records-panel">
+    <div class="toolbar">
+      <div class="result-count" id="result-count">Loading leads...</div>
+      <button class="btn-export" id="btn-export" onclick="exportGHL()">
+        ↓ Export GHL CSV
+      </button>
+    </div>
+    <div id="records-container">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Fetching motivated seller leads...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let allRecords = [];
+let filteredRecords = [];
+let activeCat = 'all';
+let activeDocType = null;
+let activeFlag = null;
+let minScore = 0;
+let searchQuery = '';
+
+// ── Load Data ──
+async function loadData() {
+  try {
+    const res = await fetch('./records.json?_=' + Date.now());
+    const data = await res.json();
+    allRecords = data.records || [];
+
+    const fetched = data.fetched_at
+      ? new Date(data.fetched_at).toLocaleString('en-US', {
+          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        })
+      : 'Never';
+    document.getElementById('last-updated').innerHTML =
+      `Updated: <strong>${fetched}</strong>`;
+
+    buildStats(data);
+    buildSidebarFilters();
+    applyFilters();
+  } catch (e) {
+    document.getElementById('records-container').innerHTML =
+      `<div class="empty"><div class="empty-icon">⚠️</div><h3>No data loaded</h3><p>Run the scraper to populate leads.</p></div>`;
+    document.getElementById('last-updated').textContent = 'No data yet';
+  }
+}
+
+// ── Stats ──
+function buildStats(data) {
+  const r = data.records || [];
+  document.getElementById('stat-total').textContent = r.length;
+  document.getElementById('stat-hot').textContent = r.filter(x => (x.score||0) >= 80).length;
+  document.getElementById('stat-fc').textContent = r.filter(x => x.cat === 'foreclosure').length;
+  document.getElementById('stat-lien').textContent = r.filter(x => x.cat === 'lien').length;
+  document.getElementById('stat-judgment').textContent = r.filter(x => x.cat === 'judgment').length;
+  document.getElementById('stat-probate').textContent = r.filter(x => x.cat === 'probate').length;
+  document.getElementById('stat-addr').textContent = data.with_address || 0;
+}
+
+// ── Sidebar filter builders ──
+function buildSidebarFilters() {
+  // Category counts
+  const cats = ['foreclosure','judgment','lien','tax','probate','release','construction'];
+  document.getElementById('cat-count-all').textContent = allRecords.length;
+  cats.forEach(cat => {
+    const el = document.getElementById(`cat-count-${cat}`);
+    if (el) el.textContent = allRecords.filter(r => r.cat === cat).length;
+  });
+
+  // Doc type filter buttons
+  const docTypeCounts = {};
+  allRecords.forEach(r => {
+    docTypeCounts[r.doc_type] = (docTypeCounts[r.doc_type] || 0) + 1;
+  });
+  const dtContainer = document.getElementById('doctype-filters');
+  dtContainer.innerHTML = '';
+  Object.entries(docTypeCounts)
+    .sort((a,b) => b[1]-a[1])
+    .forEach(([dt, count]) => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.doctype = dt;
+      btn.innerHTML = `${dt} <span class="count">${count}</span>`;
+      btn.onclick = () => toggleDocType(dt, btn);
+      dtContainer.appendChild(btn);
+    });
+
+  // Flag filter buttons
+  const flagCounts = {};
+  allRecords.forEach(r => {
+    (r.flags || []).forEach(f => {
+      flagCounts[f] = (flagCounts[f] || 0) + 1;
+    });
+  });
+  const flagContainer = document.getElementById('flag-filters');
+  flagContainer.innerHTML = '';
+  Object.entries(flagCounts)
+    .sort((a,b) => b[1]-a[1])
+    .forEach(([flag, count]) => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.flag = flag;
+      btn.innerHTML = `${flag} <span class="count">${count}</span>`;
+      btn.onclick = () => toggleFlag(flag, btn);
+      flagContainer.appendChild(btn);
+    });
+}
+
+// ── Filter logic ──
+function toggleCat(cat) {
+  activeCat = cat;
+  document.querySelectorAll('#cat-filters .filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cat === cat);
+  });
+  applyFilters();
+}
+
+function toggleDocType(dt, btn) {
+  if (activeDocType === dt) {
+    activeDocType = null;
+    btn.classList.remove('active');
+  } else {
+    activeDocType = dt;
+    document.querySelectorAll('#doctype-filters .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  applyFilters();
+}
+
+function toggleFlag(flag, btn) {
+  if (activeFlag === flag) {
+    activeFlag = null;
+    btn.classList.remove('active');
+  } else {
+    activeFlag = flag;
+    document.querySelectorAll('#flag-filters .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  filteredRecords = allRecords.filter(r => {
+    if (activeCat !== 'all' && r.cat !== activeCat) return false;
+    if (activeDocType && r.doc_type !== activeDocType) return false;
+    if (activeFlag && !(r.flags || []).includes(activeFlag)) return false;
+    if ((r.score || 0) < minScore) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const haystack = [r.owner, r.grantee, r.prop_address, r.mail_address, r.doc_num]
+        .join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const count = filteredRecords.length;
+  document.getElementById('result-count').innerHTML =
+    `Showing <strong>${count}</strong> of ${allRecords.length} leads`;
+
+  renderCards();
+}
+
+// ── Card renderer ──
+function renderCards() {
+  const container = document.getElementById('records-container');
+
+  if (!filteredRecords.length) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🔍</div>
+        <h3>No leads match your filters</h3>
+        <p>Try adjusting your search or category filter.</p>
+      </div>`;
+    return;
+  }
+
+  const html = filteredRecords.map(r => cardHTML(r)).join('');
+  container.innerHTML = `<div class="records-grid">${html}</div>`;
+}
+
+function catTagClass(cat) {
+  const map = {
+    foreclosure: 'tag-cat-foreclosure',
+    judgment: 'tag-cat-judgment',
+    lien: 'tag-cat-lien',
+    probate: 'tag-cat-probate',
+    tax: 'tag-cat-tax',
+  };
+  return map[cat] || 'tag-cat-other';
+}
+
+function scoreBadgeClass(score) {
+  if (score >= 80) return 'hot';
+  if (score >= 55) return 'warm';
+  return 'cold';
+}
+
+function cardHTML(r) {
+  const score = r.score || 0;
+  const amount = r.amount
+    ? '$' + Number(r.amount).toLocaleString('en-US', {maximumFractionDigits: 0})
+    : '';
+  const flags = (r.flags || []).map(f => `<span class="flag">${f}</span>`).join('');
+
+  const propAddr = r.prop_address
+    ? `${r.prop_address}${r.prop_city ? ', ' + r.prop_city : ''}${r.prop_zip ? ' ' + r.prop_zip : ''}`
+    : '';
+  const mailAddr = r.mail_address
+    ? `${r.mail_address}${r.mail_city ? ', ' + r.mail_city : ''}${r.mail_state ? ' ' + r.mail_state : ''}${r.mail_zip ? ' ' + r.mail_zip : ''}`
+    : '';
+
+  const clerkLink = r.clerk_url
+    ? `<a class="clerk-link" href="${r.clerk_url}" target="_blank" rel="noopener">View Record ↗</a>`
+    : '';
+
+  return `
+  <div class="record-card">
+    <div class="card-top">
+      <div>
+        <div class="owner-name">${esc(r.owner || '(Unknown Owner)')}</div>
+        ${r.grantee ? `<div style="font-size:12px;color:var(--text3);margin-top:3px;font-family:var(--mono)">→ ${esc(r.grantee)}</div>` : ''}
+      </div>
+      <div class="score-badge ${scoreBadgeClass(score)}">${score}</div>
+    </div>
+
+    <div class="card-meta">
+      <span class="tag tag-doctype">${esc(r.doc_type)}</span>
+      <span class="tag ${catTagClass(r.cat)}">${esc(r.cat_label || r.cat)}</span>
+      ${amount ? `<span class="tag tag-amount">${amount}</span>` : ''}
+      ${r.filed ? `<span class="tag tag-date">${r.filed}</span>` : ''}
+    </div>
+
+    ${(propAddr || mailAddr) ? `
+    <div class="card-address">
+      ${propAddr ? `<div class="addr-block"><div class="addr-label">Property</div><div>${esc(propAddr)}</div></div>` : ''}
+      ${mailAddr ? `<div class="addr-block"><div class="addr-label">Mailing</div><div>${esc(mailAddr)}</div></div>` : ''}
+    </div>` : ''}
+
+    ${flags ? `<div class="card-flags">${flags}</div>` : ''}
+
+    <div class="card-footer">
+      <span class="doc-num">${esc(r.doc_num || '')}</span>
+      ${clerkLink}
+    </div>
+  </div>`;
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── GHL Export ──
+function exportGHL() {
+  if (!filteredRecords.length) return;
+
+  const cols = [
+    'First Name','Last Name','Mailing Address','Mailing City','Mailing State','Mailing Zip',
+    'Property Address','Property City','Property State','Property Zip',
+    'Lead Type','Document Type','Date Filed','Document Number','Amount/Debt Owed',
+    'Seller Score','Motivated Seller Flags','Source','Public Records URL'
+  ];
+
+  function splitName(full) {
+    if (!full) return ['',''];
+    if (full.includes(',')) {
+      const p = full.split(',').map(s=>s.trim());
+      return [p[1]||'', p[0]||''];
+    }
+    const p = full.trim().split(/\s+/);
+    if (p.length === 1) return ['', p[0]];
+    return [p.slice(0,-1).join(' '), p[p.length-1]];
+  }
+
+  function toTitle(s) {
+    return s ? s.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ') : '';
+  }
+
+  const rows = filteredRecords.map(r => {
+    const [first, last] = splitName(r.owner);
+    return [
+      toTitle(first), toTitle(last),
+      r.mail_address||'', r.mail_city||'', r.mail_state||'FL', r.mail_zip||'',
+      r.prop_address||'', r.prop_city||'', r.prop_state||'FL', r.prop_zip||'',
+      r.cat_label||'', r.doc_type||'', r.filed||'', r.doc_num||'',
+      r.amount||'', r.score||0,
+      (r.flags||[]).join(' | '),
+      'Miami-Dade Clerk Public Records',
+      r.clerk_url||''
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+
+  const csv = [cols.map(c=>`"${c}"`).join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `dwd-leads-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Event wiring ──
+document.getElementById('search-input').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  applyFilters();
+});
+
+document.getElementById('score-range').addEventListener('input', e => {
+  minScore = parseInt(e.target.value);
+  document.getElementById('score-val').textContent = minScore;
+  applyFilters();
+});
+
+document.querySelectorAll('#cat-filters .filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => toggleCat(btn.dataset.cat));
+});
+
+// ── Boot ──
+loadData();
+</script>
+</body>
+</html>
