@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-05-31T12:14:23.141494Z",
+  "fetched_at": "2026-06-01T21:17:35.453794Z",
   "source": "Miami-Dade Clerk of Courts Public Records",
   "date_range": {
-    "from": "2026-05-24",
-    "to": "2026-05-31"
+    "from": "2026-05-25",
+    "to": "2026-06-01"
   },
   "total": 0,
   "with_address": 0,
