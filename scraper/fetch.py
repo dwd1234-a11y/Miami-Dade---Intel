@@ -26,8 +26,9 @@ from playwright.async_api import async_playwright, TimeoutError as PlaywrightTim
 # CONFIG
 # ─────────────────────────────────────────────────────────
 LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS", 7))
-CLERK_BASE = "https://www.miamidadeclerk.gov"
-CLERK_RECORDS_URL = f"{CLERK_BASE}/clerk/records.page"
+# Cambiado a la URL del portal real moderno de registros de Miami-Dade
+CLERK_BASE = "https://onlineservices.miamidadeclerk.gov"
+CLERK_RECORDS_URL = f"{CLERK_BASE}/officialrecords"
 PA_SEARCH_URL = "https://apps.miamidadepa.gov/PropertySearch/api/Search"
 PA_PROPERTY_URL = "https://apps.miamidadepa.gov/PropertySearch/api/Property"
 OUTPUT_PATHS = [
@@ -36,30 +37,29 @@ OUTPUT_PATHS = [
 ]
 GHL_CSV_PATH = Path("data/ghl_export.csv")
 MAX_RETRIES = 3
-RETRY_DELAY = 3  # seconds
+RETRY_DELAY = 5  # Segundos
 HEADLESS = os.environ.get("HEADLESS", "true").lower() != "false"
 
-# Doc type → category mapping
+# Mapeo de Códigos Oficiales de Florida / Miami-Dade
 DOC_TYPE_MAP = {
-    "LP":        ("foreclosure",   "Lis Pendens"),
-    "NOFC":      ("foreclosure",   "Notice of Foreclosure"),
-    "TAXDEED":   ("tax",           "Tax Deed"),
-    "JUD":       ("judgment",      "Judgment"),
-    "CCJ":       ("judgment",      "Certified Judgment"),
-    "DRJUD":     ("judgment",      "Domestic Relations Judgment"),
-    "LNCORPTX":  ("lien",         "Corporate Tax Lien"),
-    "LNIRS":     ("lien",         "IRS Lien"),
-    "LNFED":     ("lien",         "Federal Lien"),
-    "LN":        ("lien",         "Lien"),
-    "LNMECH":    ("lien",         "Mechanic's Lien"),
-    "LNHOA":     ("lien",         "HOA Lien"),
-    "MEDLN":     ("lien",         "Medicaid Lien"),
-    "PRO":       ("probate",      "Probate"),
-    "NOC":       ("construction", "Notice of Commencement"),
-    "RELLP":     ("release",      "Release of Lis Pendens"),
+    "LP":       ("foreclosure",   "Lis Pendens"),
+    "NOFC":     ("foreclosure",   "Notice of Foreclosure"),
+    "TAXDEED":  ("tax",           "Tax Deed"),
+    "JUD":      ("judgment",      "Judgment"),
+    "CCJ":      ("judgment",      "Certified Judgment"),
+    "DRJUD":    ("judgment",      "Domestic Relations Judgment"),
+    "LNCORPTX": ("lien",          "Corporate Tax Lien"),
+    "LNIRS":    ("lien",          "IRS Lien"),
+    "LNFED":    ("lien",          "Federal Lien"),
+    "LN":       ("lien",          "Lien"),
+    "LNMECH":   ("lien",          "Mechanic's Lien"),
+    "LNHOA":    ("lien",          "HOA Lien"),
+    "MEDLN":    ("lien",          "Medicaid Lien"),
+    "PRO":      ("probate",       "Probate"),
+    "NOC":      ("construction",  "Notice of Commencement"),
+    "RELLP":    ("release",       "Release of Lis Pendens"),
 }
 
-# All target doc types to search
 TARGET_DOC_TYPES = list(DOC_TYPE_MAP.keys())
 
 logging.basicConfig(
@@ -79,7 +79,6 @@ def compute_flags(record: dict) -> list[str]:
     doc_type = record.get("doc_type", "")
     cat = record.get("cat", "")
     owner = (record.get("owner") or "").upper()
-    amount = record.get("amount") or 0
     filed_str = record.get("filed") or ""
 
     if doc_type in ("LP",):
@@ -97,7 +96,6 @@ def compute_flags(record: dict) -> list[str]:
     if any(kw in owner for kw in ("LLC", "CORP", "INC", "LTD", "TRUST")):
         flags.append("LLC / corp owner")
 
-    # New this week
     if filed_str:
         try:
             filed_date = datetime.strptime(filed_str, "%Y-%m-%d").date()
@@ -106,15 +104,13 @@ def compute_flags(record: dict) -> list[str]:
         except Exception:
             pass
 
-    return list(dict.fromkeys(flags))  # deduplicate, preserve order
+    return list(dict.fromkeys(flags))
 
 
 def compute_score(record: dict, flags: list[str]) -> int:
-    score = 30  # base
+    score = 30  # Base
     score += len(flags) * 10
 
-    # LP + foreclosure combo bonus
-    doc_type = record.get("doc_type", "")
     if "Lis pendens" in flags and "Pre-foreclosure" in flags:
         score += 20
 
@@ -139,11 +135,6 @@ def compute_score(record: dict, flags: list[str]) -> int:
 # ─────────────────────────────────────────────────────────
 
 class PropertyAppraiser:
-    """
-    Queries the Miami-Dade PA public API to enrich records with
-    property address and mailing address by owner name lookup.
-    """
-
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
@@ -157,18 +148,14 @@ class PropertyAppraiser:
         self._cache: dict[str, Optional[dict]] = {}
 
     def _name_variants(self, full_name: str) -> list[str]:
-        """Generate multiple name format variants for fuzzy matching."""
         variants = [full_name]
         parts = full_name.split()
         if len(parts) >= 2:
-            # LAST FIRST
             variants.append(f"{parts[-1]} {' '.join(parts[:-1])}")
-            # LAST, FIRST
             variants.append(f"{parts[-1]}, {' '.join(parts[:-1])}")
         return variants
 
     def _search_by_name(self, name: str) -> Optional[dict]:
-        """Hit the PA property search API with owner name."""
         if name in self._cache:
             return self._cache[name]
 
@@ -182,7 +169,6 @@ class PropertyAppraiser:
                 if resp.status_code != 200:
                     continue
                 data = resp.json()
-                # PA search returns {"MinimumResults": [...]}
                 results = (
                     data.get("MinimumResults")
                     or data.get("Results")
@@ -200,51 +186,14 @@ class PropertyAppraiser:
         self._cache[name] = None
         return None
 
-    def _get_property_detail(self, folio: str) -> Optional[dict]:
-        """Fetch full detail for a folio number."""
-        try:
-            resp = self.session.get(
-                PA_PROPERTY_URL,
-                params={"f": folio},
-                timeout=15,
-            )
-            if resp.status_code == 200:
-                return resp.json()
-        except Exception as e:
-            log.debug(f"PA folio detail failed for '{folio}': {e}")
-        return None
-
     def _parse_pa_result(self, hit: dict) -> dict:
-        """Normalize PA API response to a flat address dict."""
-        # Try different field name conventions the PA API may return
-        site_addr = (
-            hit.get("SiteAddress") or hit.get("SITEADDR") or
-            hit.get("SiteAddr") or hit.get("site_addr") or ""
-        ).strip()
-        site_city = (
-            hit.get("SiteCity") or hit.get("SITE_CITY") or
-            hit.get("City") or ""
-        ).strip()
-        site_zip = (
-            hit.get("SiteZip") or hit.get("SITE_ZIP") or
-            hit.get("Zip") or ""
-        ).strip()
-        mail_addr = (
-            hit.get("MailingAddress1") or hit.get("MAILADR1") or
-            hit.get("MailAddr1") or hit.get("mail_addr") or ""
-        ).strip()
-        mail_city = (
-            hit.get("MailingCity") or hit.get("MAILCITY") or
-            hit.get("MailCity") or ""
-        ).strip()
-        mail_state = (
-            hit.get("MailingState") or hit.get("STATE") or
-            hit.get("MailState") or "FL"
-        ).strip()
-        mail_zip = (
-            hit.get("MailingZip") or hit.get("MAILZIP") or
-            hit.get("MailZip") or ""
-        ).strip()
+        site_addr = (hit.get("SiteAddress") or hit.get("SITEADDR") or hit.get("SiteAddr") or hit.get("site_addr") or "").strip()
+        site_city = (hit.get("SiteCity") or hit.get("SITE_CITY") or hit.get("City") or "").strip()
+        site_zip = (hit.get("SiteZip") or hit.get("SITE_ZIP") or hit.get("Zip") or "").strip()
+        mail_addr = (hit.get("MailingAddress1") or hit.get("MAILADR1") or hit.get("MailAddr1") or hit.get("mail_addr") or "").strip()
+        mail_city = (hit.get("MailingCity") or hit.get("MAILCITY") or hit.get("MailCity") or "").strip()
+        mail_state = (hit.get("MailingState") or hit.get("STATE") or hit.get("MailState") or "FL").strip()
+        mail_zip = (hit.get("MailingZip") or hit.get("MAILZIP") or hit.get("MailZip") or "").strip()
 
         return {
             "prop_address": site_addr,
@@ -258,8 +207,6 @@ class PropertyAppraiser:
         }
 
     def enrich(self, record: dict) -> dict:
-        """Add address data to a record dict in-place. Never raises."""
-        # Blank out address fields first
         addr_fields = [
             "prop_address", "prop_city", "prop_state", "prop_zip",
             "mail_address", "mail_city", "mail_state", "mail_zip",
@@ -279,164 +226,117 @@ class PropertyAppraiser:
 
         if pa_data:
             for k, v in pa_data.items():
-                if v:  # only overwrite if we got a value
+                if v:
                     record[k] = v
 
         return record
 
 
 # ─────────────────────────────────────────────────────────
-# CLERK PORTAL SCRAPER (Playwright)
+# PORTAL CLERK SCRAPER (Playwright Automatizado)
 # ─────────────────────────────────────────────────────────
 
 class ClerkScraper:
-    """
-    Scrapes Miami-Dade Clerk's official records portal using Playwright.
-    The portal uses ASP.NET WebForms with __doPostBack calls.
-    """
-
-    SEARCH_URL = CLERK_RECORDS_URL
-    RESULTS_PER_PAGE = 25
-
     def __init__(self, page):
         self.page = page
         self.base_url = CLERK_BASE
 
-    async def _safe_goto(self, url: str, **kwargs):
+    async def _safe_goto(self, url: str):
         for attempt in range(MAX_RETRIES):
             try:
-                await self.page.goto(url, wait_until="networkidle", timeout=60_000, **kwargs)
+                await self.page.goto(url, wait_until="domcontentloaded", timeout=60_000)
                 return
             except PlaywrightTimeout:
-                log.warning(f"Timeout on goto {url}, attempt {attempt + 1}/{MAX_RETRIES}")
+                log.warning(f"Timeout al ir a {url}, intento {attempt + 1}/{MAX_RETRIES}")
                 if attempt == MAX_RETRIES - 1:
                     raise
                 await asyncio.sleep(RETRY_DELAY)
 
-    async def _wait_and_fill(self, selector: str, value: str):
-        await self.page.wait_for_selector(selector, timeout=20_000)
-        await self.page.fill(selector, value)
-
-    async def _click_and_wait(self, selector: str):
-        await self.page.click(selector)
-        await self.page.wait_for_load_state("networkidle", timeout=45_000)
-
-    async def search_doc_type(
-        self,
-        doc_type: str,
-        date_from: str,
-        date_to: str,
-    ) -> list[dict]:
-        """
-        Search the clerk portal for a specific document type in the date range.
-        Returns list of record dicts.
-        """
+    async def search_doc_type(self, doc_type: str, date_from: str, date_to: str) -> list[dict]:
         records = []
-        log.info(f"Searching clerk for doc_type={doc_type} ({date_from} to {date_to})")
+        log.info(f"Iniciando búsqueda en Clerk: {doc_type} ({date_from} hasta {date_to})")
 
         try:
-            await self._safe_goto(self.SEARCH_URL)
+            await self._safe_goto(CLERK_RECORDS_URL)
+            await self.page.wait_for_timeout(3000)
 
-            # The portal has a records search form. We'll look for the
-            # Document Type dropdown and date range fields.
-            # The exact selectors depend on the portal's rendered HTML;
-            # we try multiple strategies.
+            # ── 1. GESTIÓN DEL DISCLAIMER O AVISO LEGAL OBLIGATORIO ──
+            # Se buscan variaciones de botones típicas en plataformas de Florida
+            disclaimer_selectors = [
+                "button:has-text('Accept')", 
+                "button:has-text('I Agree')", 
+                "#btnAccept", 
+                "a:has-text('AcceptTerms')",
+                "button:has-text('Acknowledge')"
+            ]
+            for selector in disclaimer_selectors:
+                if await self.page.locator(selector).count() > 0:
+                    log.info("Aviso legal detectado. Aceptando términos para ingresar al portal...")
+                    await self.page.click(selector)
+                    await self.page.wait_for_load_state("networkidle")
+                    await self.page.wait_for_timeout(2000)
+                    break
 
-            # Strategy 1: Standard form fields approach
-            try:
-                await self._fill_search_form(doc_type, date_from, date_to)
-                records = await self._extract_results(doc_type)
-            except Exception as e:
-                log.warning(f"Strategy 1 failed for {doc_type}: {e}")
-                # Strategy 2: Try URL-based search pattern
-                try:
-                    records = await self._url_search(doc_type, date_from, date_to)
-                except Exception as e2:
-                    log.warning(f"Strategy 2 failed for {doc_type}: {e2}")
+            # Asegurar la creación de directorios para las capturas de depuración
+            Path("dashboard").mkdir(parents=True, exist_ok=True)
+
+            # ── 2. VOLCADO DE COMPONENTES (Debug de la guía de replicación) ──
+            elements = await self.page.eval_on_selector_all(
+                "input, select, button",
+                "els => els.map(e => ({tag: e.tagName, id: e.id, name: e.name, type: e.type}))"
+            )
+            log.info(f"Campos interactivos detectados en el DOM: {elements[:12]}")
+
+            # ── 3. RELLENAR CAMPOS DEL FORMULARIO DE MIAMI-DADE ──
+            # Reescrito con selectores adaptados al entorno actual de Miami-Dade
+            doc_input = self.page.locator("input[name*='docType'], select[name*='docType'], #txtDocType, input[id*='DocType']").first
+            if await doc_input.count() > 0:
+                if await doc_input.evaluate("el => el.tagName") == "SELECT":
+                    await doc_input.select_option(value=doc_type)
+                else:
+                    await doc_input.fill(doc_type)
+            else:
+                log.warning(f"No se localizó componente directo para DocType. Intentando continuar...")
+
+            # Fechas en formato MM/DD/YYYY requerido nativamente por Miami-Dade
+            date_from_input = self.page.locator("input[name*='From'], input[id*='From'], input[name*='start'], #txtDateFrom").first
+            date_to_input = self.page.locator("input[name*='To'], input[id*='To'], input[name*='end'], #txtDateTo").first
+
+            if await date_from_input.count() > 0:
+                await date_from_input.fill(date_from)
+            if await date_to_input.count() > 0:
+                await date_to_input.fill(date_to)
+
+            # ── 4. PRESIONAR BOTÓN DE BÚSQUEDA ──
+            search_btn = self.page.locator("input[type='submit'], button[id*='Search'], button:has-text('Search'), #btnSearch").first
+            if await search_btn.count() > 0:
+                await search_btn.click()
+                await self.page.wait_for_load_state("networkidle", timeout=30_000)
+            else:
+                # Intento de contingencia usando la tecla Enter
+                await self.page.keyboard.press("Enter")
+                await self.page.wait_for_load_state("networkidle", timeout=30_000)
+
+            await self.page.wait_for_timeout(2000)
+            
+            # Guardar captura de pantalla en la carpeta pública del Dashboard para auditoría visual
+            await self.page.screenshot(path="dashboard/debug_clerk_search.png")
+
+            # ── 5. EXTRACCIÓN DE RESULTADOS DE LA TABLA ──
+            records = await self._extract_results(doc_type)
 
         except Exception as e:
-            log.error(f"Clerk search error for {doc_type}: {e}")
+            log.error(f"Error crítico procesando {doc_type}: {e}")
             log.debug(traceback.format_exc())
+            try:
+                await self.page.screenshot(path="dashboard/error_clerk_screenshot.png")
+            except Exception:
+                pass
 
-        log.info(f"  Got {len(records)} records for {doc_type}")
+        log.info(f"   Finalizado: {len(records)} registros extraídos para {doc_type}")
         return records
 
-    async def _fill_search_form(self, doc_type: str, date_from: str, date_to: str):
-        """Fill the official records search form."""
-        # Wait for the page to stabilize
-        await self.page.wait_for_load_state("networkidle", timeout=30_000)
-
-        # Try to find the document type select
-        doc_type_selectors = [
-            "select[name*='DocType']",
-            "select[name*='docType']",
-            "select[name*='document']",
-            "#DocType",
-            "#ddlDocType",
-            "select[id*='DocType']",
-        ]
-
-        doc_type_selector = None
-        for sel in doc_type_selectors:
-            if await self.page.locator(sel).count() > 0:
-                doc_type_selector = sel
-                break
-
-        if doc_type_selector:
-            await self.page.select_option(doc_type_selector, value=doc_type)
-        else:
-            # Try typing doc type in a text field
-            await self.page.fill("input[name*='DocType'], input[id*='DocType']", doc_type)
-
-        # Fill date from
-        date_from_selectors = [
-            "input[name*='DateFrom']", "input[name*='StartDate']",
-            "input[id*='DateFrom']", "input[id*='StartDate']",
-            "#DateFrom", "#StartDate",
-        ]
-        for sel in date_from_selectors:
-            if await self.page.locator(sel).count() > 0:
-                await self.page.fill(sel, date_from)
-                break
-
-        # Fill date to
-        date_to_selectors = [
-            "input[name*='DateTo']", "input[name*='EndDate']",
-            "input[id*='DateTo']", "input[id*='EndDate']",
-            "#DateTo", "#EndDate",
-        ]
-        for sel in date_to_selectors:
-            if await self.page.locator(sel).count() > 0:
-                await self.page.fill(sel, date_to)
-                break
-
-        # Submit the search
-        submit_selectors = [
-            "input[type='submit']",
-            "button[type='submit']",
-            "input[value*='Search']",
-            "button:has-text('Search')",
-        ]
-        for sel in submit_selectors:
-            if await self.page.locator(sel).count() > 0:
-                await self._click_and_wait(sel)
-                break
-
-    async def _url_search(self, doc_type: str, date_from: str, date_to: str) -> list[dict]:
-        """
-        Attempt direct URL parameter search (some clerk portals support this).
-        """
-        # Miami-Dade clerk uses a POST-based search but may have GET params
-        search_url = (
-            f"{self.SEARCH_URL}?"
-            f"docType={doc_type}&dateFrom={date_from}&dateTo={date_to}"
-        )
-        await self._safe_goto(search_url)
-        await self.page.wait_for_load_state("networkidle", timeout=30_000)
-        return await self._extract_results(doc_type)
-
     async def _extract_results(self, doc_type: str) -> list[dict]:
-        """Parse the results table from the current page, paginating through all pages."""
         all_records = []
         page_num = 1
 
@@ -447,72 +347,64 @@ class ClerkScraper:
             page_records = self._parse_results_table(soup, doc_type)
             all_records.extend(page_records)
 
-            log.debug(f"  Page {page_num}: {len(page_records)} records")
+            log.info(f"   Página {page_num}: parseados {len(page_records)} registros")
 
-            # Check for next page
+            # Si la página actual no arrojó registros, cancelamos paginación inmediatamente
+            if not page_records:
+                break
+
             next_page = await self._go_next_page(soup)
-            if not next_page or not page_records:
+            if not next_page:
                 break
 
             page_num += 1
-            await self.page.wait_for_load_state("networkidle", timeout=30_000)
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
 
         return all_records
 
     def _parse_results_table(self, soup: BeautifulSoup, doc_type: str) -> list[dict]:
-        """Extract records from the HTML results table."""
         records = []
-
-        # Look for results table
         tables = soup.find_all("table")
         result_table = None
 
         for table in tables:
-            headers = [th.get_text(strip=True).lower() for th in table.find_all("th")]
-            if any(kw in " ".join(headers) for kw in
-                   ["document", "grantor", "grantee", "filed", "book"]):
+            headers = [th.get_text(strip=True).lower() for th in table.find_all(["th", "td"])]
+            if any(kw in " ".join(headers) for kw in ["document", "grantor", "grantee", "filed", "book", "case"]):
                 result_table = table
                 break
-
-        if not result_table:
-            # Try finding by common result div patterns
-            rows_div = soup.find("div", class_=re.compile(r"result|record", re.I))
-            if rows_div:
-                result_table = rows_div.find("table")
 
         if not result_table:
             return records
 
         rows = result_table.find_all("tr")
-        if not rows:
+        if len(rows) <= 1:
             return records
 
-        # Parse header row to map column positions
+        # Mapeo posicional dinámico de columnas del encabezado
         header_row = rows[0]
         headers = [th.get_text(strip=True).lower() for th in header_row.find_all(["th", "td"])]
 
         col_map = {}
         for i, h in enumerate(headers):
-            if "doc" in h and "num" in h:
+            if "doc" in h or "number" in h or "clerk" in h:
                 col_map["doc_num"] = i
             elif "type" in h:
                 col_map["doc_type_col"] = i
-            elif "filed" in h or "record" in h or "date" in h:
+            elif "filed" in h or "date" in h or "record" in h:
                 col_map["filed"] = i
-            elif "grantor" in h or "owner" in h:
+            elif "grantor" in h or "owner" in h or "from" in h:
                 col_map["grantor"] = i
-            elif "grantee" in h:
+            elif "grantee" in h or "to" in h:
                 col_map["grantee"] = i
-            elif "legal" in h:
+            elif "legal" in h or "desc" in h:
                 col_map["legal"] = i
-            elif "amount" in h or "consid" in h:
+            elif "amount" in h or "value" in h:
                 col_map["amount"] = i
 
         for row in rows[1:]:
             try:
                 cells = row.find_all(["td", "th"])
-                if not cells:
+                if not cells or len(cells) < 2:
                     continue
 
                 def cell_text(key: str) -> str:
@@ -523,39 +415,43 @@ class ClerkScraper:
 
                 doc_num = cell_text("doc_num")
                 if not doc_num:
-                    # Try to find doc number from any anchor link
                     link = row.find("a")
                     if link:
                         doc_num = link.get_text(strip=True)
 
-                # Build clerk direct URL
+                if not doc_num:
+                    continue
+
                 link_tag = row.find("a", href=True)
                 clerk_url = ""
                 if link_tag:
                     href = link_tag["href"]
                     clerk_url = href if href.startswith("http") else f"{self.base_url}{href}"
 
-                # Parse amount - strip non-numeric except dot
                 amount_str = cell_text("amount").replace("$", "").replace(",", "").strip()
                 try:
                     amount = float(amount_str) if amount_str else 0.0
                 except ValueError:
                     amount = 0.0
 
-                # Normalize filed date
                 filed_raw = cell_text("filed").strip()
                 filed = self._normalize_date(filed_raw)
+
+                # Si es un Lis Pendens, invertimos contacto para capturar al Propietario (Grantee)
+                owner_name = cell_text("grantor").strip()
+                grantee_name = cell_text("grantee").strip()
+                if doc_type == "LP" and grantee_name:
+                    owner_name = grantee_name
 
                 record = {
                     "doc_num":  doc_num.strip(),
                     "doc_type": doc_type,
                     "filed":    filed,
-                    "owner":    cell_text("grantor").strip(),
-                    "grantee":  cell_text("grantee").strip(),
+                    "owner":    owner_name,
+                    "grantee":  grantee_name,
                     "legal":    cell_text("legal").strip(),
                     "amount":   amount,
                     "clerk_url": clerk_url,
-                    # Address fields filled later by PA enrichment
                     "prop_address": "",
                     "prop_city":    "",
                     "prop_state":   "FL",
@@ -570,62 +466,44 @@ class ClerkScraper:
                 record["cat"] = cat
                 record["cat_label"] = cat_label
 
-                if doc_num:  # skip empty rows
-                    records.append(record)
-
-            except Exception as e:
-                log.debug(f"Row parse error: {e}")
+                records.append(record)
+            except Exception:
                 continue
 
         return records
 
     def _normalize_date(self, raw: str) -> str:
-        """Try to parse various date formats to YYYY-MM-DD."""
         if not raw:
             return ""
-        formats = [
-            "%m/%d/%Y", "%m-%d-%Y", "%Y-%m-%d",
-            "%m/%d/%y", "%B %d, %Y", "%b %d, %Y",
-        ]
+        formats = ["%m/%d/%Y", "%m-%d-%Y", "%Y-%m-%d", "%m/%d/%y"]
         for fmt in formats:
             try:
                 return datetime.strptime(raw, fmt).strftime("%Y-%m-%d")
             except ValueError:
                 continue
-        return raw  # Return as-is if all fail
+        return raw
 
     async def _go_next_page(self, soup: BeautifulSoup) -> bool:
-        """Click next page if available, return True if navigated."""
         next_selectors = [
             "a:has-text('Next')",
             "a[title*='Next']",
-            "input[value*='Next']",
-            "[aria-label*='next']",
-            "a.next",
+            "button:has-text('Next')",
+            "li.next a",
+            "a:has-text('❯')"
         ]
         for sel in next_selectors:
             if await self.page.locator(sel).count() > 0:
-                await self._click_and_wait(sel)
-                return True
-
-        # Try __doPostBack for ASP.NET paging
-        page_links = soup.find_all("a", href=re.compile(r"__doPostBack"))
-        for link in page_links:
-            text = link.get_text(strip=True)
-            if text == ">" or text.lower() == "next":
-                event_target = re.search(r"__doPostBack\('([^']+)'", link["href"])
-                if event_target:
-                    await self.page.evaluate(
-                        f"__doPostBack('{event_target.group(1)}', '')"
-                    )
-                    await self.page.wait_for_load_state("networkidle", timeout=30_000)
+                try:
+                    await self.page.click(sel)
+                    await self.page.wait_for_load_state("networkidle", timeout=15_000)
                     return True
-
+                except Exception:
+                    pass
         return False
 
 
 # ─────────────────────────────────────────────────────────
-# GHL CSV EXPORT
+# EXPORTACIÓN Y PERSISTENCIA (Sincronizado con el Dashboard)
 # ─────────────────────────────────────────────────────────
 
 GHL_COLUMNS = [
@@ -636,9 +514,7 @@ GHL_COLUMNS = [
     "Seller Score", "Motivated Seller Flags", "Source", "Public Records URL",
 ]
 
-
 def split_name(full_name: str) -> tuple[str, str]:
-    """Split 'LAST, FIRST' or 'FIRST LAST' into (first, last)."""
     if not full_name:
         return "", ""
     if "," in full_name:
@@ -651,14 +527,12 @@ def split_name(full_name: str) -> tuple[str, str]:
 
 
 def records_to_ghl_csv(records: list[dict]) -> str:
-    """Convert records to GHL-importable CSV string."""
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=GHL_COLUMNS)
     writer.writeheader()
 
     for r in records:
         first, last = split_name(r.get("owner", ""))
-        _, cat_label = DOC_TYPE_MAP.get(r.get("doc_type", ""), ("other", r.get("doc_type", "")))
         writer.writerow({
             "First Name":           first,
             "Last Name":            last,
@@ -680,20 +554,11 @@ def records_to_ghl_csv(records: list[dict]) -> str:
             "Source":               "Miami-Dade Clerk Public Records",
             "Public Records URL":   r.get("clerk_url", ""),
         })
-
     return output.getvalue()
 
 
-# ─────────────────────────────────────────────────────────
-# OUTPUT / PERSISTENCE
-# ─────────────────────────────────────────────────────────
-
 def build_output(records: list[dict], date_from: str, date_to: str) -> dict:
-    """Build the final JSON output structure."""
-    with_address = sum(
-        1 for r in records
-        if r.get("prop_address") or r.get("mail_address")
-    )
+    with_address = sum(1 for r in records if r.get("prop_address") or r.get("mail_address"))
     return {
         "fetched_at":    datetime.utcnow().isoformat() + "Z",
         "source":        "Miami-Dade Clerk of Courts Public Records",
@@ -705,27 +570,18 @@ def build_output(records: list[dict], date_from: str, date_to: str) -> dict:
 
 
 def save_outputs(output: dict, records: list[dict]):
-    """Write records.json to all output paths and GHL CSV."""
     payload = json.dumps(output, indent=2, default=str)
-
     for path in OUTPUT_PATHS:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(payload, encoding="utf-8")
-        log.info(f"Saved {output['total']} records to {path}")
+        log.info(f"Guardado exitoso en JSON: {path}")
 
-    # GHL CSV
     GHL_CSV_PATH.parent.mkdir(parents=True, exist_ok=True)
-    ghl_csv = records_to_ghl_csv(records)
-    GHL_CSV_PATH.write_text(ghl_csv, encoding="utf-8")
-    log.info(f"Saved GHL export to {GHL_CSV_PATH}")
+    GHL_CSV_PATH.write_text(records_to_ghl_csv(records), encoding="utf-8")
+    log.info(f"Guardado exitoso en GHL CSV: {GHL_CSV_PATH}")
 
-
-# ─────────────────────────────────────────────────────────
-# DEDUPLICATION
-# ─────────────────────────────────────────────────────────
 
 def deduplicate(records: list[dict]) -> list[dict]:
-    """Remove duplicate doc_num entries, keeping highest scored."""
     seen: dict[str, dict] = {}
     for r in records:
         key = r.get("doc_num", "")
@@ -737,21 +593,23 @@ def deduplicate(records: list[dict]) -> list[dict]:
 
 
 # ─────────────────────────────────────────────────────────
-# MAIN ORCHESTRATOR
+# ORQUESTRADOR CENTRAL
 # ─────────────────────────────────────────────────────────
 
 async def run():
     today = date.today()
     date_from_dt = today - timedelta(days=LOOKBACK_DAYS)
+    
+    # Formato nativo MM/DD/YYYY para inputs del portal de Miami-Dade
     date_from = date_from_dt.strftime("%m/%d/%Y")
     date_to   = today.strftime("%m/%d/%Y")
+    
     date_from_iso = date_from_dt.strftime("%Y-%m-%d")
     date_to_iso   = today.strftime("%Y-%m-%d")
 
     log.info("=" * 60)
-    log.info("DWD Motivated Seller Scraper — Miami-Dade County")
-    log.info(f"Date range: {date_from} to {date_to}")
-    log.info(f"Doc types: {', '.join(TARGET_DOC_TYPES)}")
+    log.info("DWD Motivated Seller Scraper — Miami-Dade County (Florida)")
+    log.info(f"Rango de Fechas: {date_from} hasta {date_to}")
     log.info("=" * 60)
 
     pa = PropertyAppraiser()
@@ -763,10 +621,7 @@ async def run():
             args=["--no-sandbox", "--disable-dev-shm-usage"],
         )
         context = await browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36"
-            ),
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             viewport={"width": 1280, "height": 900},
             locale="en-US",
         )
@@ -776,72 +631,46 @@ async def run():
         for doc_type in TARGET_DOC_TYPES:
             try:
                 records = await scraper.search_doc_type(doc_type, date_from, date_to)
-                for r in records:
-                    all_records.append(r)
+                all_records.extend(records)
             except Exception as e:
-                log.error(f"Failed to scrape {doc_type}: {e}")
-                log.debug(traceback.format_exc())
-            # Polite delay between searches
-            await asyncio.sleep(2)
+                log.error(f"Fallo en bloque secuencial para {doc_type}: {e}")
+            await asyncio.sleep(3)
 
         await browser.close()
 
-    log.info(f"Raw records collected: {len(all_records)}")
+    log.info(f"Total registros crudos recolectados: {len(all_records)}")
 
-    # Enrich with PA data
-    log.info("Enriching with Property Appraiser data...")
-    for i, record in enumerate(all_records):
-        try:
-            pa.enrich(record)
-        except Exception as e:
-            log.debug(f"PA enrichment error on record {i}: {e}")
-        if (i + 1) % 50 == 0:
-            log.info(f"  Enriched {i + 1}/{len(all_records)}...")
+    # Enriquecimiento cruzado automatizado mediante la API del Property Appraiser de Miami-Dade
+    if all_records:
+        log.info("Iniciando cruce de datos con la API del Property Appraiser...")
+        for i, record in enumerate(all_records):
+            try:
+                pa.enrich(record)
+            except Exception as e:
+                log.debug(f"Error omitido en fila {i}: {e}")
+            if (i + 1) % 50 == 0 or (i + 1) == len(all_records):
+                log.info(f"   Progreso de enriquecimiento: {i + 1}/{len(all_records)}...")
 
-    # Compute flags + scores
+    # Computar banderas de distress y scores de motivación (0-100)
     for record in all_records:
         try:
             flags = compute_flags(record)
-            score = compute_score(record, flags)
             record["flags"] = flags
-            record["score"] = score
-        except Exception as e:
-            log.debug(f"Scoring error: {e}")
+            record["score"] = compute_score(record, flags)
+        except Exception:
             record["flags"] = []
             record["score"] = 30
 
-    # Deduplicate
     all_records = deduplicate(all_records)
+    all_records.sort(key=lambda r: (-(r.get("score") or 0), r.get("filed") or ""), reverse=False)
 
-    # Sort: highest score first, then by filed date desc
-    all_records.sort(
-        key=lambda r: (-(r.get("score") or 0), r.get("filed") or ""),
-        reverse=False,
-    )
-
-    log.info(f"Final record count after dedup: {len(all_records)}")
-
-    # Build and save output
     output = build_output(all_records, date_from_iso, date_to_iso)
     save_outputs(output, all_records)
 
-    # Summary stats
-    by_type = {}
-    for r in all_records:
-        t = r.get("doc_type", "?")
-        by_type[t] = by_type.get(t, 0) + 1
-
-    log.info("\n--- SUMMARY ---")
-    for t, count in sorted(by_type.items(), key=lambda x: -x[1]):
-        log.info(f"  {t}: {count}")
-    log.info(f"  Total: {len(all_records)} records")
-    log.info(f"  With address: {output['with_address']}")
-    avg_score = (
-        sum(r.get("score", 0) for r in all_records) / len(all_records)
-        if all_records else 0
-    )
-    log.info(f"  Avg seller score: {avg_score:.1f}")
-    log.info("Done.")
+    log.info("\n--- RESUMEN FINAL DE LA EJECUCIÓN ---")
+    log.info(f"   Total leads únicos procesados: {len(all_records)}")
+    log.info(f"   Leads con dirección mapeada con éxito: {output['with_address']}")
+    log.info("Proceso completado exitosamente.")
 
 
 if __name__ == "__main__":
