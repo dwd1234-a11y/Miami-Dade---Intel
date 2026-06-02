@@ -1,6 +1,6 @@
 """
-Deals With Dignity — Miami-Dade County Motivated Seller Lead Scraper
-PORTAL DE CORTES PÚBLICAS (No requiere Login / No requiere Pago)
+Deals With Dignity — Miami-Dade County Multi-Source Distress Scraper
+Extrae Foreclosures públicos y Tax Distress sin pasar por pasarelas de pago.
 
 Run: python scraper/fetch.py
 """
@@ -15,13 +15,13 @@ from pathlib import Path
 import requests
 
 # ─────────────────────────────────────────────────────────
-# CONFIG / ENDPOINTS ABIERTOS
+# CONFIGURACIÓN DE RUTAS ABIERTAS
 # ─────────────────────────────────────────────────────────
 LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS", 7))
 
-# Usamos el endpoint público del sistema de casos civiles (Foreclosures civiles)
-MIAMI_COURT_API = "https://www2.miamidadeclerk.gov/CivilWeb/CaseSearch/CaseSearchByDateFiled"
-PA_SEARCH_URL = "https://apps.miamidadepa.gov/PropertySearch/api/Search"
+# Endpoints alternativos abiertos de subastas y datos inmobiliarios de Miami-Dade
+FORECLOSE_CALENDAR_URL = "https://miamidade.realforeclose.com/index.cfm?zaction=USER&zact=getCalendarData"
+PA_API_URL = "https://apps.miamidadepa.gov/PropertySearch/api/Search"
 
 OUTPUT_PATHS = [
     Path("dashboard/records.json"),
@@ -30,84 +30,85 @@ OUTPUT_PATHS = [
 GHL_CSV_PATH = Path("data/ghl_export.csv")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-log = logging.getLogger("dwd_court_rescue")
+log = logging.getLogger("dwd_miami_multisource")
 
-class MiamiDadeCourtScraper:
+class MiamiDadeDistressScraper:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/javascript, */*",
             "X-Requested-With": "XMLHttpRequest"
         })
 
-    def fetch_foreclosures(self, date_str: str) -> list[dict]:
-        """Trae los casos de Foreclosure presentados en una fecha específica (Abierto)."""
+    def fetch_foreclosure_auctions(self) -> list[dict]:
+        """Extrae las ejecuciones hipotecarias del calendario público de subastas de Miami-Dade."""
         records = []
-        log.info(f"Buscando ejecuciones hipotecarias archivadas el: {date_str}...")
+        log.info("Accediendo al calendario de subastas públicas de Miami-Dade RealForeclose...")
         
-        # Parámetros para el portal civil público de Miami-Dade
-        # Tipo de Código de Caso 22 = 'CH FORECLOSURE' / 'PROPERTY'
-        params = {
-            "dateFiled": date_str,  # Formato MM/DD/YYYY
-            "codeCode": "22",       # Código de corte para ejecuciones de propiedades
-            "page": 1,
-            "rows": 100
-        }
-
-        try:
-            # Petición al visor de casos del circuito civil que alimenta el portal sin clave
-            response = self.session.get(MIAMI_COURT_API, params=params, timeout=20)
-            if response.status_code != 200:
-                return records
-
-            data = response.json()
-            # Estructura de filas devuelta por la tabla de la corte
-            rows = data.get("rows") or data.get("Results") or []
+        # Consultamos los días del rango seleccionado
+        today = date.today()
+        for i in range(LOOKBACK_DAYS):
+            target_date = today + timedelta(days=i) # Buscamos subastas futuras programadas
+            date_str = target_date.strftime("%m/%d/%Y")
             
-            for item in rows:
-                case_id = item.get("CaseNumber") or item.get("caseNumber")
-                if not case_id:
+            try:
+                # Petición al endpoint del calendario público de Florida RealForeclose
+                resp = self.session.get(FORECLOSE_CALENDAR_URL, params={"daybyday": date_str}, timeout=15)
+                if resp.status_code != 200:
                     continue
+                
+                data = resp.json()
+                # El sistema devuelve un listado de objetos con los casos del día
+                cards = data.get("daydata") or data.get("cards") or []
+                
+                for card in cards:
+                    case_num = card.get("casenum") or card.get("CASE_NUMBER")
+                    if not case_num:
+                        continue
+                        
+                    # Extraer el dueño (usualmente listado en el campo de deudor o estilo de caso)
+                    title = card.get("title", "").upper()
+                    owner_name = "UNKNOWN OWNER"
+                    if "VS" in title:
+                        # En Florida: 'BANCO VS PROPIETARIO', el dueño va después del VS
+                        parts = title.split("VS")
+                        if len(parts) > 1:
+                            owner_name = parts[1].strip()
 
-                # En las demandas de la corte:
-                # Defendant = El dueño demandado (A quien queremos comprarle)
-                # Plaintiff = El banco o la HOA demandante (Quien inicia el Lis Pendens)
-                defendant = item.get("DefendantName") or item.get("defName") or "UNKNOWN"
-                plaintiff = item.get("PlaintiffName") or item.get("plName") or ""
-
-                record = {
-                    "doc_num": str(case_id).strip(),
-                    "doc_type": "LP",
-                    "filed": datetime.strptime(date_str, "%m/%d/%Y").strftime("%Y-%m-%d"),
-                    "owner": str(defendant).strip().upper(),
-                    "grantee": str(plaintiff).strip().upper(),
-                    "legal": f"Case Style: {item.get('CaseStyle', '')}",
-                    "amount": 0.0,
-                    "clerk_url": f"https://www2.miamidadeclerk.gov/CivilWeb/CaseSearch/CaseSummary?CaseNumber={case_id}",
-                    "prop_address": "", "prop_city": "", "prop_state": "FL", "prop_zip": "",
-                    "mail_address": "", "mail_city": "", "mail_state": "FL", "mail_zip": "",
-                    "cat": "lp",
-                    "cat_label": "Lis Pendens"
-                }
-                records.append(record)
-
-        except Exception as e:
-            log.error(f"Error conectando a la base de datos de la corte: {e}")
-        
+                    record = {
+                        "doc_num": str(case_num).strip(),
+                        "doc_type": "LP",
+                        "filed": today.strftime("%Y-%m-%d"),
+                        "owner": owner_name,
+                        "grantee": title.split("VS")[0].strip() if "VS" in title else "LENDER",
+                        "legal": f"Auction Date: {date_str}. Final Judgment Amount: {card.get('amount', 'N/A')}",
+                        "amount": float(str(card.get("amount", 0)).replace("$", "").replace(",", "")) if card.get("amount") else 0.0,
+                        "clerk_url": f"https://miamidade.realforeclose.com/index.cfm?zaction=AUCTION&zact=showcase&caseid={case_num}",
+                        "prop_address": "", "prop_city": "", "prop_state": "FL", "prop_zip": "",
+                        "mail_address": "", "mail_city": "", "mail_state": "FL", "mail_zip": "",
+                        "cat": "foreclosure",
+                        "cat_label": "Foreclosure Auction Sale"
+                    }
+                    records.append(record)
+                    
+            except Exception as e:
+                log.debug(f"Omitiendo fecha de subasta {date_str}: {e}")
+                continue
+                
         return records
 
     def enrich_with_pa(self, record: dict):
-        """Cruza el nombre del demandado con el Property Appraiser."""
+        """Cruza los datos del dueño de la subasta con el Property Appraiser para sacar la dirección."""
         owner = record.get("owner", "").strip()
         if not owner or "UNKNOWN" in owner or len(owner) < 4:
             return
 
-        # Limpieza básica del formato de la corte 'APELLIDO NOMBRE'
-        clean_owner = owner.replace(",", "")
+        # Limpieza de sufijos corporativos comunes para mejorar el match de la API
+        clean_owner = owner.replace("ET AL", "").replace("ET UX", "").replace(",", "").strip()
         
         try:
-            resp = self.session.get(PA_SEARCH_URL, params={"q": clean_owner, "s": "ownername", "p": 1, "size": 1}, timeout=10)
+            resp = self.session.get(PA_API_URL, params={"q": clean_owner, "s": "ownername", "p": 1, "size": 1}, timeout=10)
             if resp.status_code == 200:
                 results = resp.json().get("MinimumResults") or resp.json().get("Results") or []
                 if results:
@@ -119,75 +120,64 @@ class MiamiDadeCourtScraper:
                     record["mail_city"] = (hit.get("MailingCity") or "").strip()
                     record["mail_zip"] = (hit.get("MailingZip") or "").strip()
         except Exception as e:
-            log.debug(f"Error en Property Appraiser para {clean_owner}: {e}")
+            log.debug(f"No se pudo enriquecer a {clean_owner} en el PA: {e}")
 
 # ─────────────────────────────────────────────────────────
-# GUARDADO DE DATOS (Contrato records.json)
+# PROCESAMIENTO Y SISTEMA DE PUNTUACIÓN
 # ─────────────────────────────────────────────────────────
 
-def save_outputs(records: list[dict], str_from: str, str_to: str):
-    with_address = sum(1 for r in records if r.get("prop_address"))
+def save_outputs(records: list[dict]):
+    today_str = date.today().strftime("%Y-%m-%d")
     output = {
         "fetched_at": datetime.utcnow().isoformat() + "Z",
-        "source": "Miami-Dade Public Court Records (Free Feed)",
-        "date_range": {"from": str_from, "to": str_to},
+        "source": "Miami-Dade Unified Public Auctions & Property Appraiser",
+        "date_range": {"from": today_str, "to": today_str},
         "total": len(records),
-        "with_address": with_address,
+        "with_address": sum(1 for r in records if r.get("prop_address")),
         "records": records
     }
     
-    payload = json.dumps(output, indent=2, default=str)
     for path in OUTPUT_PATHS:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(payload, encoding="utf-8")
+        path.write_text(json.dumps(output, indent=2, default=str), encoding="utf-8")
+        log.info(f"JSON guardado en: {path}")
 
-    # CSV para GoHighLevel
     GHL_CSV_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(GHL_CSV_PATH, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["First Name", "Property Address", "Property City", "Property Zip", "Score", "Flags"])
+        writer.writerow(["First Name", "Property Address", "Property City", "Property Zip", "Seller Score", "Motivated Seller Flags"])
         for r in records:
-            writer.writerow([r["owner"], r["prop_address"], r["prop_city"], r["prop_zip"], 85, "Lis Pendens | Pre-foreclosure"])
-
-# ─────────────────────────────────────────────────────────
-# ORQUESTRADOR PRINCIPAL
-# ─────────────────────────────────────────────────────────
+            writer.writerow([r["owner"], r["prop_address"], r["prop_city"], r["prop_zip"], r["score"], "|".join(r["flags"])])
 
 def run():
-    today = date.today()
-    scraper = MiamiDadeCourtScraper()
-    all_leads = []
+    log.info("==========================================================")
+    log.info("DWD MIAMI-DADE — Extractor de Ejecuciones Hipotecarias Activas")
+    log.info("==========================================================")
 
-    log.info("================================────────────────==========")
-    log.info("DWD RESCUE — Extrayendo Lis Pendens desde Registros de Corte")
-    log.info("================================────────────────==========")
+    scraper = MiamiDadeDistressScraper()
+    
+    # 1. Traer ejecuciones del calendario de subastas abierto
+    leads = scraper.fetch_foreclosure_auctions()
+    log.info(f"Leads de Foreclosures encontrados en subastas: {len(leads)}")
 
-    # Iterar sobre los últimos días buscando registros abiertos paso a paso
-    for d in range(LOOKBACK_DAYS):
-        target_date = today - timedelta(days=d)
-        date_str = target_date.strftime("%m/%d/%Y")
-        leads = scraper.fetch_foreclosures(date_str)
-        all_leads.extend(leads)
+    # 2. Enriquecer con direcciones reales
+    if leads:
+        log.info("Cruzando registros de subastas con bases de datos del Property Appraiser...")
+        for i, l in enumerate(leads):
+            scraper.enrich_with_pa(l)
+            l["flags"] = ["Pre-foreclosure", "Auction Scheduled"]
+            l["score"] = 95 if l["prop_address"] else 70
+            if (i+1) % 10 == 0 or (i+1) == len(leads):
+                log.info(f"   Progreso: {i+1}/{len(leads)}...")
 
-    log.info(f"Casos de Foreclosure crudos encontrados en la corte: {len(all_leads)}")
-
-    if all_leads:
-        log.info("Enriqueciendo demandados con el Property Appraiser de Miami-Dade...")
-        for i, lead in enumerate(all_leads):
-            scraper.enrich_with_pa(lead)
-            lead["flags"] = ["Lis pendens", "Pre-foreclosure"]
-            lead["score"] = 85 if lead["prop_address"] else 60
-            if (i+1) % 10 == 0:
-                log.info(f"   Progreso: {i+1}/{len(all_leads)}...")
-
-    # Eliminar duplicados por número de caso de corte
+    # Remover registros duplicados
     seen = {}
-    for l in all_leads:
+    for l in leads:
         seen[l["doc_num"]] = l
     final_leads = list(seen.values())
 
-    save_outputs(final_leads, (today - timedelta(days=LOOKBACK_DAYS)).strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d"))
-    log.info(f"¡Proceso Terminado! {len(final_leads)} leads subidos de forma gratuita al Dashboard.")
+    save_outputs(final_leads)
+    log.info(f"Proceso finalizado. {len(final_leads)} leads de alto valor sincronizados en tu panel.")
 
 if __name__ == "__main__":
     run()
