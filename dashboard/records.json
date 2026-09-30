@@ -1,19 +1,19 @@
 {
-  "fetched_at": "2026-09-29T13:33:38.816049Z",
+  "fetched_at": "2026-09-30T13:11:09.617894Z",
   "source": "RealForeclose.com \u2014 Miami-Dade County Foreclosure Auctions",
   "date_range": {
-    "from": "2026-09-29",
-    "to": "2026-12-28"
+    "from": "2026-09-30",
+    "to": "2026-12-29"
   },
-  "total": 7,
-  "with_address": 6,
+  "total": 6,
+  "with_address": 4,
   "records": [
     {
-      "doc_num": "2025-002978-CA-01",
+      "doc_num": "2024-247756-CC-23",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-09-29",
+      "filed": "2026-09-30",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -42,11 +42,11 @@
       "score": 90
     },
     {
-      "doc_num": "2025-007696-CA-01",
+      "doc_num": "2025-003962-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-09-29",
+      "filed": "2026-09-30",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -75,11 +75,11 @@
       "score": 90
     },
     {
-      "doc_num": "2025-011422-CA-01",
+      "doc_num": "2025-016807-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-09-29",
+      "filed": "2026-09-30",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -108,11 +108,11 @@
       "score": 90
     },
     {
-      "doc_num": "2025-023088-CA-01",
+      "doc_num": "2026-060625-CC-25",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-09-29",
+      "filed": "2026-09-30",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -141,77 +141,11 @@
       "score": 90
     },
     {
-      "doc_num": "2025-024180-CA-01",
+      "doc_num": "Preview Items For Sale Wednesday September 30, 2026 Search < < Previous Auction Next Auction > > Current Pursuant to new legislation effective July 1, 2008, F. S. 45.031(10), and F. S. 197.542 (4)(a),(b) the Clerk may conduct the sale of real or personal property under an order or judgment by electronic means, and tax deed sales in lieu of public outcry. Running Auctions There are no cases currently being auctioned. Auctions Waiting page of 1 page of 1 Auctions Closed or Canceled page of 1 Auction Sold 09/30/2026 09:01 AM ET Amount $48,200.00 Sold To 3rd Party Bidder Auction Type: FORECLOSURE Case #: 2024-247756-CC-23 Final Judgment Amount: $48,185.98 Parcel ID: 28-2202-029-2320 Property Address: 3530 MYSTIC POINTE DR 908 AVENTURA, FL- 33180 Assessed Value: $312,584.00 Plaintiff Max Bid: Hidden Auction Sold 09/30/2026 09:02 AM ET Amount $10,100.00 Sold To Plaintiff Auction Type: FORECLOSURE Case #: 2025-003962-CA-01 Final Judgment Amount: $299,804.92 Parcel ID: 02-3234-034-0070 Property Address: 1776 JAMES AVE 2G MIAMI BEACH, FL- 33139 Assessed Value: $190,515.00 Plaintiff Max Bid: Hidden Auction Status Canceled per Bankruptcy Auction Type: FORECLOSURE Case #: 2025-016007-CA-01 Final Judgment Amount: $2,932,328.31 Parcel ID: MULTIPLE PARCELS Plaintiff Max Bid: $2,400,000.00 Auction Status Canceled per Order Auction Type: FORECLOSURE Case #: 2025-016807-CA-01 Final Judgment Amount: $77,399.42 Parcel ID: 30-2232-047-0210 Property Address: 1600 NE 114 ST 210 MIAMI, FL- 33181 Assessed Value: $141,431.00 Plaintiff Max Bid: Hidden Auction Sold 09/30/2026 09:04 AM ET Amount $16,600.00 Sold To 3rd Party Bidder Auction Type: FORECLOSURE Case #: 2026-060625-CC-25 Final Judgment Amount: $6,567.63 Parcel ID: 16-7823-008-0730 Property Address: 1025 NW 4 TER FLORIDA CITY, FL- 33034 Assessed Value: $292,000.00 Plaintiff Max Bid: Hidden page of 1 1509541,1510190,1508940,1519807,1514922",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-09-29",
-      "frcl_sale_date": "",
-      "owner": "",
-      "contact": "",
-      "grantee": "Plaintiff Max Bid:",
-      "amount": 0.0,
-      "legal": "",
-      "folio": "Parcel ID:",
-      "prop_address": "Property Address:",
-      "prop_city": "Miami",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "",
-      "sources": [
-        "FRCL_PREVIEW"
-      ],
-      "match_confidence": "HIGH",
-      "flags": [
-        "Pre-foreclosure",
-        "Lis pendens",
-        "New this week"
-      ],
-      "score": 90
-    },
-    {
-      "doc_num": "2026-005277-CA-01",
-      "doc_type": "FRCL",
-      "cat": "foreclosure",
-      "cat_label": "Foreclosure Auction",
-      "filed": "2026-09-29",
-      "frcl_sale_date": "",
-      "owner": "",
-      "contact": "",
-      "grantee": "Plaintiff Max Bid:",
-      "amount": 0.0,
-      "legal": "",
-      "folio": "Parcel ID:",
-      "prop_address": "Property Address:",
-      "prop_city": "Miami",
-      "prop_state": "FL",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "FL",
-      "mail_zip": "",
-      "clerk_url": "",
-      "sources": [
-        "FRCL_PREVIEW"
-      ],
-      "match_confidence": "HIGH",
-      "flags": [
-        "Pre-foreclosure",
-        "Lis pendens",
-        "New this week"
-      ],
-      "score": 90
-    },
-    {
-      "doc_num": "Preview Items For Sale Tuesday September 29, 2026 Search < < Previous Auction Next Auction > > Current Pursuant to new legislation effective July 1, 2008, F. S. 45.031(10), and F. S. 197.542 (4)(a),(b) the Clerk may conduct the sale of real or personal property under an order or judgment by electronic means, and tax deed sales in lieu of public outcry. Running Auctions There are no cases currently being auctioned. Auctions Waiting page of 1 page of 1 Auctions Closed or Canceled page of 1 Auction Status Canceled per Bankruptcy Auction Type: FORECLOSURE Case #: 2025-002978-CA-01 Final Judgment Amount: $559,537.66 Parcel ID: 30-5827-000-2080 Property Address: MIAMI, FL- 33187 Assessed Value: $232,925.00 Plaintiff Max Bid: Hidden Auction Sold 09/29/2026 09:01 AM ET Amount $5,100.00 Sold To Plaintiff Auction Type: FORECLOSURE Case #: 2025-007696-CA-01 Final Judgment Amount: $6,821,863.64 Parcel ID: 20-5013-003-1280 Property Address: 6175 SW 128 ST PINECREST, FL- 33156 Assessed Value: $5,655,187.00 Plaintiff Max Bid: $6,821,863.64 Auction Status Canceled per County Auction Type: FORECLOSURE Case #: 2025-011422-CA-01 Final Judgment Amount: $556,308.01 Parcel ID: 30-4012-011-0280 Property Address: 2228 SW 58 CT MIAMI, FL- 33155 Assessed Value: $422,607.00 Plaintiff Max Bid: $414,000.00 Auction Status Canceled per County Auction Type: FORECLOSURE Case #: 2025-023088-CA-01 Final Judgment Amount: $55,129.21 Parcel ID: 30-3102-013-0480 Property Address: 801 NW 96 ST MIAMI, FL- 33150 Assessed Value: $91,899.00 Plaintiff Max Bid: Hidden Auction Status Canceled per County Auction Type: FORECLOSURE Case #: 2025-024180-CA-01 Final Judgment Amount: $199,222.30 Parcel ID: 14-2235-032-0070 Property Address: 9156 COLLINS AVE 202 SURFSIDE, FL- 33154 Assessed Value: $250,760.00 Plaintiff Max Bid: $197,843.84 Auction Status Canceled per Order Auction Type: FORECLOSURE Case #: 2026-005277-CA-01 Final Judgment Amount: $67,261.43 Parcel ID: 30-4912-046-1970 Property Address: 11800 SW 18 ST 210-4 MIAMI, FL- 33175 Assessed Value: $238,781.00 Plaintiff Max Bid: Hidden page of 1 1517570,1513952,1513958,1518559,1515746,1513959",
-      "doc_type": "FRCL",
-      "cat": "foreclosure",
-      "cat_label": "Foreclosure Auction",
-      "filed": "2026-09-29",
+      "filed": "2026-09-30",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -232,6 +166,39 @@
         "FRCL_PREVIEW"
       ],
       "match_confidence": "LOW",
+      "flags": [
+        "Pre-foreclosure",
+        "Lis pendens",
+        "New this week"
+      ],
+      "score": 85
+    },
+    {
+      "doc_num": "2025-016007-CA-01",
+      "doc_type": "FRCL",
+      "cat": "foreclosure",
+      "cat_label": "Foreclosure Auction",
+      "filed": "2026-09-30",
+      "frcl_sale_date": "",
+      "owner": "",
+      "contact": "",
+      "grantee": "Plaintiff Max Bid:",
+      "amount": 0.0,
+      "legal": "",
+      "folio": "Parcel ID:",
+      "prop_address": "",
+      "prop_city": "Miami",
+      "prop_state": "FL",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "FL",
+      "mail_zip": "",
+      "clerk_url": "",
+      "sources": [
+        "FRCL_PREVIEW"
+      ],
+      "match_confidence": "HIGH",
       "flags": [
         "Pre-foreclosure",
         "Lis pendens",
