@@ -1,19 +1,19 @@
 {
-  "fetched_at": "2026-11-09T16:59:17.192833Z",
+  "fetched_at": "2026-11-10T15:18:54.890199Z",
   "source": "RealForeclose.com \u2014 Miami-Dade County Foreclosure Auctions",
   "date_range": {
-    "from": "2026-11-09",
-    "to": "2027-02-07"
+    "from": "2026-11-10",
+    "to": "2027-02-08"
   },
   "total": 11,
   "with_address": 9,
   "records": [
     {
-      "doc_num": "2018-016804-CA-01",
+      "doc_num": "2014-015252-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -42,11 +42,11 @@
       "score": 90
     },
     {
-      "doc_num": "2021-025377-CA-01",
+      "doc_num": "2016-015486-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -75,11 +75,11 @@
       "score": 90
     },
     {
-      "doc_num": "2022-017623-CA-01",
+      "doc_num": "2022-017590-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -108,11 +108,11 @@
       "score": 90
     },
     {
-      "doc_num": "2022-018799-CA-01",
+      "doc_num": "2023-026351-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -141,11 +141,11 @@
       "score": 90
     },
     {
-      "doc_num": "2023-011716-CA-01",
+      "doc_num": "2024-011937-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -174,11 +174,11 @@
       "score": 90
     },
     {
-      "doc_num": "2023-018932-CA-01",
+      "doc_num": "2025-007261-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -207,11 +207,11 @@
       "score": 90
     },
     {
-      "doc_num": "2024-000195-CA-01",
+      "doc_num": "2025-010654-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -240,11 +240,11 @@
       "score": 90
     },
     {
-      "doc_num": "2024-006541-CA-01",
+      "doc_num": "2025-021129-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -273,11 +273,11 @@
       "score": 90
     },
     {
-      "doc_num": "2024-006803-CA-01",
+      "doc_num": "2025-022209-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -306,11 +306,11 @@
       "score": 90
     },
     {
-      "doc_num": "Preview Items For Sale Monday November 9, 2026 Search < < Previous Auction Next Auction > > Current Pursuant to new legislation effective July 1, 2008, F. S. 45.031(10), and F. S. 197.542 (4)(a),(b) the Clerk may conduct the sale of real or personal property under an order or judgment by electronic means, and tax deed sales in lieu of public outcry. Running Auctions There are no cases currently being auctioned. Auctions Waiting page of 1 page of 1 Auctions Closed or Canceled page of 4 Auction Status Canceled per Bankruptcy Auction Type: FORECLOSURE Case #: 2018-016804-CA-01 Final Judgment Amount: $661,352.63 Parcel ID: 32-2016-002-0730 Property Address: 16376 NW 88 AVE MIAMI LAKES, FL- 33018 Assessed Value: $218,476.00 Plaintiff Max Bid: Hidden Auction Status Canceled per Bankruptcy Auction Type: FORECLOSURE Case #: 2021-025377-CA-01 Final Judgment Amount: $417,562.91 Parcel ID: 34-2105-002-0870 Property Address: 19621 NW 37 CT MIAMI GARDENS, FL- 33055 Assessed Value: $377,711.00 Plaintiff Max Bid: Hidden Auction Status Canceled per Bankruptcy Auction Type: FORECLOSURE Case #: 2022-017623-CA-01 Final Judgment Amount: $330,293.81 Parcel ID: 16-7919-030-0050 Property Address: 462 NE 4 AVE FLORIDA CITY, FL- 33034 Assessed Value: $294,749.00 Plaintiff Max Bid: Hidden Auction Sold 11/09/2026 09:01 AM ET Amount $787,600.00 Sold To 3rd Party Bidder Auction Type: FORECLOSURE Case #: 2022-018799-CA-01 Final Judgment Amount: $891,360.48 Parcel ID: 30-6828-000-2250 Property Address: 26100 SW 209 AVE REDLAND, FL- 33031 Assessed Value: $309,243.00 Plaintiff Max Bid: Hidden Auction Status Canceled per Order Auction Type: FORECLOSURE Case #: 2023-003448-CA-01 Final Judgment Amount: $246,363.36 Parcel ID: Property Appraiser Plaintiff Max Bid: Hidden Auction Status Canceled per County Auction Type: FORECLOSURE Case #: 2023-011716-CA-01 Final Judgment Amount: $635,780.33 Parcel ID: 07-2208-018-0040 Property Address: 1201 NE 175 ST NORTH MIAMI BEACH, FL- 33162 Assessed Value: $389,653.00 Plaintiff Max Bid: Hidden Auction Sold 11/09/2026 09:09 AM ET Amount $410,000.00 Sold To 3rd Party Bidder Auction Type: FORECLOSURE Case #: 2023-018932-CA-01 Final Judgment Amount: $505,075.91 Parcel ID: 10-7929-008-0030 Property Address: 2923 AUGUSTA CIR HOMESTEAD, FL- 33035 Assessed Value: $568,481.00 Plaintiff Max Bid: $348,100.00 Auction Status Canceled per Bankruptcy Auction Type: FORECLOSURE Case #: 2024-000195-CA-01 Final Judgment Amount: $511,795.28 Parcel ID: 32-2015-018-0100 Property Address: 16231 NW 84 CT HIALEAH, FL- 33016 Assessed Value: $412,150.00 Plaintiff Max Bid: Hidden Auction Status Canceled per Bankruptcy Auction Type: FORECLOSURE Case #: 2024-006541-CA-01 Final Judgment Amount: $1,207,427.39 Parcel ID: 02-3202-008-1050 Property Address: 733 81 ST MIAMI BEACH, FL- 33141 Assessed Value: $834,256.00 Plaintiff Max Bid: Hidden Auction Sold 11/09/2026 09:10 AM ET Amount $865,000.00 Sold To Plaintiff Auction Type: FORECLOSURE Case #: 2024-006803-CA-01 Final Judgment Amount: $1,022,358.91 Parcel ID: 30-4018-001-0860 Property Address: 2802 SW 115 AVE MIAMI, FL- 33165 Assessed Value: $769,201.00 Plaintiff Max Bid: Hidden page of 4 1522078,1521529,1521871,1513494,1519862,1525237,1519834,1521698,1516859,1522149,1519998,1515726,1523760,1521699,1517997,1523474,1524616,1523043,1518474,1511464,1521968,1520558,1511466,1521959,1522081,1521841,1521530,1522830,1519803,1520927,1522829,1522157,1511465,1522082,1519812,1510397,1524573,1521534,1522076,1522079",
+      "doc_num": "Preview Items For Sale Tuesday November 10, 2026 Search < < Previous Auction Next Auction > > Current Pursuant to new legislation effective July 1, 2008, F. S. 45.031(10), and F. S. 197.542 (4)(a),(b) the Clerk may conduct the sale of real or personal property under an order or judgment by electronic means, and tax deed sales in lieu of public outcry. Running Auctions There are no cases currently being auctioned. Auctions Waiting page of 1 page of 1 Auctions Closed or Canceled page of 2 Auction Status Canceled per County Auction Type: FORECLOSURE Case #: 2014-015252-CA-01 Final Judgment Amount: $249,083.31 Parcel ID: 34-1133-028-0540 Property Address: 3225 NW 204 TER MIAMI, FL- 33056 Assessed Value: $116,427.00 Plaintiff Max Bid: Hidden Auction Status Canceled per Bankruptcy Auction Type: FORECLOSURE Case #: 2016-015486-CA-01 Final Judgment Amount: $594,923.76 Parcel ID: 35-3019-002-1420 Property Address: 5297 NW 112 PL DORAL, FL- 33178 Assessed Value: $657,918.00 Plaintiff Max Bid: Hidden Auction Status Canceled per County Auction Type: FORECLOSURE Case #: 2022-017590-CA-01 Final Judgment Amount: $2,324,191.15 Parcel ID: 31-2214-044-1580 Property Address: 300 SUNNY ISLES BLVD 4-TS-03 SUNNY ISLES BEACH, FL- 33160 Assessed Value: $3,326,400.00 Plaintiff Max Bid: $2,324,191.15 Auction Status Canceled per County Auction Type: FORECLOSURE Case #: 2023-026351-CA-01 Final Judgment Amount: $237,778.26 Parcel ID: 30-6934-021-2510 Property Address: 14218 SW 272 ST MIAMI, FL- 33032 Assessed Value: $335,000.00 Plaintiff Max Bid: Hidden Auction Status Canceled per County Auction Type: FORECLOSURE Case #: 2024-011937-CA-01 Final Judgment Amount: $157,946.96 Parcel ID: 01-3131-027-0580 Property Address: 5249 NW 7 ST 511 MIAMI, FL- 33126 Assessed Value: $80,248.00 Plaintiff Max Bid: Hidden Auction Sold 11/10/2026 09:03 AM ET Amount $300,000.00 Sold To Plaintiff Auction Type: FORECLOSURE Case #: 2025-007261-CA-01 Final Judgment Amount: $546,669.36 Parcel ID: Property Appraiser Property Address: 3010 NW 10TH AVE MIAMI, FL- 33127 Plaintiff Max Bid: Hidden Auction Status Canceled per County Auction Type: FORECLOSURE Case #: 2025-010654-CA-01 Final Judgment Amount: $238,149.19 Parcel ID: 30-1231-027-0030 Property Address: 455 NE 210 TER MIAMI, FL- 33179 Assessed Value: $313,235.00 Plaintiff Max Bid: Hidden Auction Status Judgment Vacated/Dismissed Auction Type: FORECLOSURE Case #: 2025-014045-CA-01 Final Judgment Amount: $382,911.97 Parcel ID: Property Appraiser Plaintiff Max Bid: Hidden Auction Status Canceled per Bankruptcy Auction Type: FORECLOSURE Case #: 2025-021129-CA-01 Final Judgment Amount: $11,544.34 Parcel ID: 10-7920-013-6200 Property Address: 1873 SE 20 TER HOMESTEAD, FL- 33035 Assessed Value: $507,208.00 Plaintiff Max Bid: Hidden Auction Status Canceled per Bankruptcy Auction Type: FORECLOSURE Case #: 2025-022209-CA-01 Final Judgment Amount: $444,690.67 Parcel ID: 30-5909-002-0280 Property Address: 10514 SW 147 CT MIAMI, FL- 33196 Assessed Value: $408,039.00 Plaintiff Max Bid: Hidden page of 2 1519422,1525597,1520536,1524285,1519997,1515941,1516907,1515944,1516290,1515799,1516083,1520463,1525287,1520464",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
@@ -339,11 +339,11 @@
       "score": 85
     },
     {
-      "doc_num": "2023-003448-CA-01",
+      "doc_num": "2025-014045-CA-01",
       "doc_type": "FRCL",
       "cat": "foreclosure",
       "cat_label": "Foreclosure Auction",
-      "filed": "2026-11-09",
+      "filed": "2026-11-10",
       "frcl_sale_date": "",
       "owner": "",
       "contact": "",
